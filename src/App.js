@@ -233,20 +233,22 @@ function App() {
   const FilmAutocomplete = () => {
     return (
       <div>
-        <Autocomplete
-          options={allTitles}
-          clearOnEscape
-          disabled={gameWon.includes(true)}
-          renderInput={params => (
-            <TextField {...params}  label="Film" variant="outlined" disabled={gameWon.includes(true)}/> 
-          )}
-          onChange={(_event, film) => {
-            if (film !== null) {
-              console.log(film)
-              selectFilm(film)
-            }
-          }}
-        />
+        <Card>
+          <Autocomplete
+            options={allTitles}
+            clearOnEscape
+            disabled={gameWon.includes(true)}
+            renderInput={params => (
+              <TextField {...params}  label="Film" variant="outlined" disabled={gameWon.includes(true)}/> 
+            )}
+            onChange={(_event, film) => {
+              if (film !== null) {
+                console.log(film)
+                selectFilm(film)
+              }
+            }}
+          />
+        </Card>
         <div style={{height:"20px"}}></div>
       </div>
     );
@@ -267,9 +269,10 @@ function App() {
       )
     }
 
-    const film_title = guesses[props.id]
+    const index = guesses.length - props.id - 1
+    const film_title = guesses[index]
     console.log("Film Title: " + film_title)
-    const won = gameWon[props.id]
+    const won = gameWon[index]
 
     if (won === true) {
       return (
@@ -286,8 +289,8 @@ function App() {
       )
     }
 
-    const actorString = actors[props.id]
-    const directorString = directors[props.id]
+    const actorString = actors[index]
+    const directorString = directors[index]
 
     console.log("Actor String: " + actorString)
     console.log("Director String: " + directorString)
@@ -348,6 +351,9 @@ function App() {
     if (gameWon.includes(true)) {
       totalButtons = [0, 1, 2, 3, 4, 5]
     }
+    // else if (totalButtons.length > 6) {
+    //   totalButtons = [0, 1, 2, 3, 4, 5]
+    // }
     console.log("Total Buttons: " + totalButtons)
     return totalButtons.map((_, index) => (
       <ImageButton key={index + gameWon} id={index+1} size={12.0/totalButtons.length}/>
