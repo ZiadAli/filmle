@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@font-face {
+  font-family: "AntonRegular";
+  src: local("Anton-Regular"),
+    url("./fonts/Anton-Regular.ttf") format("truetype");
+  font-weight: normal;
+}
+
+.font-title {
+  font-family: 'Anton Regular';
+}
+
+.font-title2 {
+  font-family: 'Permanent Marker';
+}

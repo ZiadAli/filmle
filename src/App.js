@@ -10,6 +10,7 @@ import { getStorage, ref as stref, getDownloadURL } from "firebase/storage";
 import { Grid } from '@mui/material';
 import { Card } from '@mui/material';
 import { Button } from '@mui/material';
+import { AntonRegular } from './fonts/Anton-Regular.ttf'
 
 function App() {
   const [todayFilmCast, setTodayFilmCast] = useState(Object)
@@ -364,7 +365,13 @@ function App() {
     <div className="App">
       
       <Grid container direction="column" >
-        <Grid item> This is the header </Grid>
+        <Grid item> 
+          <Typography color="white" component={'span'}>
+            <h1 className='font-title2'>
+              <b>FILMLE</b>
+            </h1>
+          </Typography>
+        </Grid>
         <Grid item container>
           <Grid item xs={0.2}></Grid>
           <Grid item xs={11.6}>
