@@ -53,13 +53,13 @@ function App() {
     overrides: {
       Button: {
         raisedPrimary: {
-          color: "#ffffff"
+          color: "#222222"
         }
       }
     },
     palette: {
       primary: {
-        main: '#fff',
+        main: '#444444',
       },
     },
   });
