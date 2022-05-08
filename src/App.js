@@ -300,11 +300,20 @@ function App() {
     onValue(ref(db, "Popular"), snapshot => {
       const data = snapshot.val()
       if(data !== null) {
+        const titlesAndIds = []
+        
+        for (const [key, value] of Object.entries(data)) {
+          titlesAndIds.push({title: value, id: key})
+          //titles.push(value)
+          //ids.push(key)
+        }
+
+        titlesAndIds.sort((a, b) => a.title.localeCompare(b.title))
         const titles = []
         const ids = []
-        for (const [key, value] of Object.entries(data)) {
-          titles.push(value)
-          ids.push(key)
+        for (let i = 0; i<titlesAndIds.length; i++) {
+          titles.push(titlesAndIds[i].title)
+          ids.push(titlesAndIds[i].id)
         }
         setAllTitles(titles)
         setAllTitleIds(ids)
@@ -407,6 +416,7 @@ function App() {
   }
 
   const winGame = (film) => {
+    setGameOver(true)
     saveUserState([...guesses, film], actors, directors, [...gameWon, true])
     setGuesses([...guesses, film])
     updateStats([...gameWon, true])
