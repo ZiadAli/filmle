@@ -575,6 +575,11 @@ function App() {
             you'll be informed which cast members are shared. 
           </Typography>
         </DialogContent>
+        <DialogContent align="center">
+          <Typography gutterBottom>
+            Movies pulled from IMDB datasets and some shots sourced from <a href="https://www.shotdeck.com">ShotDeck.com</a>
+          </Typography>
+        </DialogContent>
         <DialogContent dividers justify="center" align="center">
           <Typography gutterBottom>
             Like Filmle? <a href="https://www.buymeacoffee.com/filmlegame">Buy me a coffee!</a>
