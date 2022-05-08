@@ -683,6 +683,12 @@ function App() {
   }));
 
   const ShareDialog = () => {
+    const stats = readStats()
+    const played = stats["gamesPlayed"]
+    const winPerc = Math.round(stats["winPercentage"]*100)
+    const currStreak = stats["currentStreak"]
+    const maxStreak = stats["maxStreak"]
+
     return (
       <BootstrapDialog
         onClose={handleClose}
@@ -696,6 +702,35 @@ function App() {
           <Typography gutterBottom>
             Today's Film: {todayFilmTitle}
           </Typography>
+          <Box display="flex" flexDirection="row" align="center" alignItems="top" justifyContent="center">
+            <Box display="flex" flexDirection="column">
+              <Typography variant="h5" align="center">{played}</Typography>
+              <Typography variant="subtitle2" align="center" fontSize="10px">Played</Typography>
+            </Box>
+            <Box display="flex" flexDirection="column">
+              <Typography variant="h3">&nbsp;</Typography>
+            </Box>
+            <Box display="flex" flexDirection="column">
+              <Typography variant="h5" align="center">{winPerc}%</Typography>
+              <Typography variant="subtitle2" align="center" fontSize="10px">Win %</Typography>
+            </Box>
+            <Box display="flex" flexDirection="column">
+              <Typography variant="h3">&nbsp;</Typography>
+            </Box>
+            <Box display="flex" flexDirection="column">
+              <Typography variant="h5" align="center">{currStreak}</Typography>
+              <Typography variant="subtitle2" align="center" fontSize="10px">Current</Typography>
+              <Typography variant="subtitle2" align="center" fontSize="10px">Streak</Typography>
+            </Box>
+            <Box display="flex" flexDirection="column">
+              <Typography variant="h3">&nbsp;</Typography>
+            </Box>
+            <Box display="flex" flexDirection="column">
+              <Typography variant="h5" align="center">{maxStreak}</Typography>
+              <Typography variant="subtitle2" align="center" fontSize="10px">Max</Typography>
+              <Typography variant="subtitle2" align="center" fontSize="10px">Streak</Typography>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions align="center">
           <div style={{flex: '1 0 0'}} />
