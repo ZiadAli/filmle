@@ -257,6 +257,7 @@ function App() {
       }
       else {
         stats["currentStreak"] = 1
+        stats["maxStreak"] = 1
       }
       localStorage.setItem("lastWin", todayDate)
     }
