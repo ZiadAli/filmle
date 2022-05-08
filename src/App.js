@@ -43,6 +43,8 @@ function App() {
   const [openDialog, setOpenDialog] = useState(false)
   const [openInfoDialog, setOpenInfoDialog] = useState(false)
 
+  const [todayDate, setTodayDate] = useState("")
+
   const handleClickOpen = () => {
     setOpenDialog(true);
   };
@@ -125,9 +127,151 @@ function App() {
     date = date.replace("/", "_")
     console.log(date)
 
+    setTodayDate(date)
+    const lastPlayedDate = localStorage.getItem("lastGame")
+    if (lastPlayedDate === date) {
+      //Load existing user guesses
+      getUserGuesses()
+    }
+    else {
+      localStorage.setItem("lastGame", date)
+      localStorage.setItem("guesses", JSON.stringify([]))
+      localStorage.setItem("actors", JSON.stringify([]))
+      localStorage.setItem("directors", JSON.stringify([]))
+      localStorage.setItem("gameWon", JSON.stringify([]))
+    }
     readAllTitles(date)
+    readStats()
     //getTodayFilm(date)
+
   }, [])
+
+  const saveUserState = (todayGuesses, todayActors, todayDirectors, todayGameWon) => {
+    localStorage.setItem("guesses", JSON.stringify(todayGuesses))
+    localStorage.setItem("actors", JSON.stringify(todayActors))
+    localStorage.setItem("directors", JSON.stringify(todayDirectors))
+    localStorage.setItem("gameWon", JSON.stringify(todayGameWon))
+  }
+
+  const getUserGuesses = () => {
+    var todayGuesses = localStorage.getItem("guesses")
+    var todayActors = localStorage.getItem("actors")
+    var todayDirectors = localStorage.getItem("directors")
+    var todayGameWon = localStorage.getItem("gameWon")
+
+    if (todayGuesses !== null) {
+      todayGuesses = JSON.parse(todayGuesses)
+    }
+    else {
+      todayGuesses = []
+    }
+    if (todayActors !== null) {
+      todayActors = JSON.parse(todayActors)
+    }
+    else {
+      todayActors = []
+    }
+    if (todayDirectors !== null) {
+      todayDirectors = JSON.parse(todayDirectors)
+    }
+    else {
+      todayDirectors = []
+    }
+    if (todayGameWon !== null) {
+      todayGameWon = JSON.parse(todayGameWon)
+    }
+
+    console.log("Today Guesses")
+    console.log(todayGuesses)
+
+    setGuesses(todayGuesses)
+    setActors(todayActors)
+    setDirectors(todayDirectors)
+    setGameWon(todayGameWon)
+
+    if (todayGameWon.includes(true) || todayGuesses.length >= 6) {
+      setGameOver(true)
+      setOpenDialog(true)
+    }
+  }
+
+  const newStats = () => {
+    const filmle_stats = {
+      averageGuesses: 0,
+      currentStreak: 0,
+      gamesPlayed: 0,
+      gamesWon: 0,
+      guesses: {
+        "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "fail": 0
+      },
+      maxStreak: 0,
+      winPercentage: 0
+    }
+
+    return filmle_stats
+  }
+
+  const readStats = () => {
+    var stats = JSON.parse(localStorage.getItem("filmle-stats"))
+    if (stats === null) {
+      stats = newStats()
+    } 
+    console.log("Filmle stats: ")
+    console.log(stats)
+    return stats
+  }
+
+  const checkWonYesterday = () => {
+    const today = new Date()
+    var yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
+    yesterday = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit'}).format(yesterday)
+    yesterday = yesterday.replace("/", "_")
+    yesterday = yesterday.replace("/", "_")
+    
+    const lastWin = localStorage.getItem("lastWin")
+
+    if (lastWin === yesterday) {
+      return true
+    }
+    return false
+  }
+  
+  const updateStats = (todayGameWon) => {
+    var stats = readStats()
+
+    const averageGuesses = stats["averageGuesses"]
+    const gamesPlayed = stats["gamesPlayed"]
+    const allGamesWon = stats["gamesWon"]
+    if (todayGameWon.includes(true)) {
+      const newAverageGuesses = (averageGuesses*allGamesWon+todayGameWon.length)/(allGamesWon+1)
+      stats["averageGuesses"] = newAverageGuesses
+      stats["gamesWon"] = allGamesWon + 1
+      stats["guesses"]["" + todayGameWon.length] = stats["guesses"]["" + todayGameWon.length] + 1
+
+      const wonYesterday = checkWonYesterday()
+      if (wonYesterday === true) {
+        stats["currentStreak"] = stats["currentStreak"] + 1
+        if (stats["currentStreak"] > stats["maxStreak"]) {
+          stats["maxStreak"] = stats["currentStreak"]
+        }
+      }
+      else {
+        stats["currentStreak"] = 1
+      }
+      localStorage.setItem("lastWin", todayDate)
+    }
+    else {
+      stats["guesses"]["fail"] = stats["guesses"]["fail"] + 1
+      stats["currentStreak"] = 0
+    }
+    stats["gamesPlayed"] = gamesPlayed + 1
+    stats["winPercentage"] = stats["gamesWon"] / stats["gamesPlayed"]
+
+    console.log("New Stats")
+    console.log(stats)
+
+    localStorage.setItem("filmle-stats", JSON.stringify(stats))
+  }
 
   // Loads the ID of today's film and loads the cast
   const getTodayFilm = (date, titles, ids) => {
@@ -170,7 +314,7 @@ function App() {
   }
 
   // Gets cast for specified film ID and loads it into either "todayFilmCast" or "guessFilmCast" using set_func
-  const readCast = (film_id, set_func, compare) => {
+  const readCast = (film_id, set_func, compare, guesses) => {
     if (film_id.length > 6) {
       var film_ref = "Cast/" + film_id
       onValue(ref(db, film_ref), snapshot => {
@@ -182,14 +326,14 @@ function App() {
             set_func(data)
           }
           if (compare === true) {
-            compareCast(data)
+            compareCast(data, guesses)
           }
         }
       })
     }
   }
 
-  const compareCast = (guessCast) => {
+  const compareCast = (guessCast, guesses) => {
     console.log("Compare")
 
     console.log(todayFilmCast["Actors"])
@@ -258,10 +402,14 @@ function App() {
 
     setActors([...actors, actorString])
     setDirectors([...directors, directorString])
+
+    saveUserState(guesses, [...actors, actorString], [...directors, directorString], [...gameWon, false])
   }
 
   const winGame = (film) => {
+    saveUserState([...guesses, film], actors, directors, [...gameWon, true])
     setGuesses([...guesses, film])
+    updateStats([...gameWon, true])
     setGameWon([...gameWon, true])
     setOpenDialog(true)
   }
@@ -278,7 +426,7 @@ function App() {
       }
       else {
         setGameWon([...gameWon, false])
-        readCast(id, null, true)
+        readCast(id, null, true, [...guesses, film])
         downloadImage(todayFilm, guesses.length+1)
         setGuesses([...guesses, film])
 
@@ -322,7 +470,7 @@ function App() {
     if (guesses.length <= props.id) {
       return (
         <div>
-          <Card style={{backgroundColor:"gainsboro"}}>
+          <Card style={{backgroundColor:"#010202"}}>
             <CardContent>
               <Typography>
               </Typography>
