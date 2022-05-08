@@ -19,6 +19,7 @@ import { DialogContent } from '@mui/material';
 import { DialogActions } from '@mui/material';
 import { createTheme } from '@mui/material';
 import { ThemeProvider } from '@mui/material';
+import copy from 'copy-to-clipboard';
 
 
 function App() {
@@ -390,7 +391,7 @@ function App() {
     return (
       <Grid item xs={props.size}>
         <ThemeProvider theme={myTheme}>
-          <Button style={{borderColor: "white"}} onClick={() => imageButtonClicked(props.id-1)} variant="contained" color="primary">
+          <Button style={{minWidth:"20px"}} onClick={() => imageButtonClicked(props.id-1)} variant="contained" color="primary">
             {props.id}
           </Button>
         </ThemeProvider>
@@ -438,16 +439,42 @@ function App() {
     }
 
     outputString = outputString + "\n\nhttps://www.filmle.org"
-
-    console.log("Game Output String " + outputString)
-    if (navigator.canShare !== undefined) {
-      navigator.share(outputString)
-    }
-    else {
-      navigator.clipboard.writeText(outputString)
-    }
+    copy(outputString)
+    alert("Copied to clipboard")
+    //alert("Navigator Share: " + navigator.share)
+    // navigator.clipboard.writeText(outputString)
+    // console.log("Game Output String " + outputString)
+    // try {
+    //   navigator.share({outputString})
+    //   alert("Shared")
+    // }
+    // catch {
+    //     navigator.clipboard.writeText(outputString).then(() => {
+    //       alert("Copied to clipboard")
+    //     })
+    //     .catch(() => {
+    //       alert("Couldn't copy to clipboard")
+    //     })
+    // }
+   
+    // alert(navigator.share)
+    // if (navigator.canShare !== undefined) {
+    //   navigator.share(outputString)
+    // }
+    // else {
+    //   navigator.clipboard.writeText(outputString)
+    // }
 
     console.log(outputString)
+  }
+
+  async function CheckPermission(){
+    const readPerm = await navigator.permissions.query({name: 'clipboard-read', allowWithoutGesture: false });
+    
+    const writePerm = await navigator.permissions.query({name: 'clipboard-write', allowWithoutGesture: false });
+    
+    // Will be 'granted', 'denied' or 'prompt':
+    alert('Write: '+writePerm.state);
   }
 
   const BootstrapDialogTitle = (props) => {
