@@ -4,7 +4,7 @@ import './App.css';
 import { db } from './firebase';
 import { set, ref, onValue } from 'firebase/database';
 import { useState, useEffect } from 'react';
-import { Autocomplete, CardContent, getFabUtilityClass, Typography } from '@mui/material';
+import { Autocomplete, Box, CardContent, getFabUtilityClass, Typography } from '@mui/material';
 import { TextField } from '@mui/material';
 import { getStorage, ref as stref, getDownloadURL } from "firebase/storage";
 import { Grid } from '@mui/material';
@@ -12,7 +12,7 @@ import { Card } from '@mui/material';
 import { Button } from '@mui/material';
 import { Dialog, DialogTitle } from '@mui/material';
 import { IconButton } from '@mui/material';
-import { Close, Share } from '@mui/icons-material';
+import { Close, Info, Share } from '@mui/icons-material';
 import { PropTypes } from 'prop-types'
 import { styled } from '@mui/material';
 import { DialogContent } from '@mui/material';
@@ -41,6 +41,7 @@ function App() {
   const [gameOver, setGameOver] = useState(false)
 
   const [openDialog, setOpenDialog] = useState(false)
+  const [openInfoDialog, setOpenInfoDialog] = useState(false)
 
   const handleClickOpen = () => {
     setOpenDialog(true);
@@ -49,6 +50,14 @@ function App() {
   const handleClose = () => {
     setOpenDialog(false);
   };
+
+  const handleClickOpenInfo = () => {
+    setOpenInfoDialog(true)
+  }
+
+  const handleInfoClose = () => {
+    setOpenInfoDialog(false)
+  }
 
   const myTheme = createTheme({
     overrides: {
@@ -62,6 +71,9 @@ function App() {
       primary: {
         main: '#444444',
       },
+      secondary: {
+        main: "#ffffff"
+      }
     },
   });
 
@@ -483,6 +495,9 @@ function App() {
     if (gameWon.includes(true)) {
       title = "Great Job!"
     }
+    if (props.info === true) {
+      title = "Info"
+    }
   
     return (
       <DialogTitle sx={{ m: 0, p: 2 }} {...other} align="center">
@@ -519,8 +534,8 @@ function App() {
     },
   }));
 
-  return (
-    <div className="App">
+  const ShareDialog = () => {
+    return (
       <BootstrapDialog
         onClose={handleClose}
         //aria-labelledby="customized-dialog-title"
@@ -540,14 +555,62 @@ function App() {
           <div style={{flex: '1 0 0'}} />
         </DialogActions>
       </BootstrapDialog>
-      <Grid container direction="column" >
-        <Grid item> 
-          <Typography color="white" component={'span'}>
-            <h1 className='font-title2'>
-              <b>FILMLE</b>
-            </h1>
+    )
+  }
+
+  const InfoDialog = () => {
+    return (
+      <BootstrapDialog
+        onClose={handleInfoClose}
+        //aria-labelledby="customized-dialog-title"
+        open={openInfoDialog}
+      >
+        <BootstrapDialogTitle id="customized-dialog-title" onClose={handleInfoClose} info={true}>
+          Title Goes Here
+        </BootstrapDialogTitle>
+        <DialogContent dividers>
+          <Typography gutterBottom>
+            Guess the film using the stills provided before they run out! Each still is slightly easier than the previous one, and all 
+            stills (6 total) are from the same movie. If your guess is incorrect but shares actors or directors with the film of the day,
+            you'll be informed which cast members are shared. 
           </Typography>
+        </DialogContent>
+        <DialogContent dividers justify="center" align="center">
+          <Typography gutterBottom>
+            Like Filmle? <a href="https://www.buymeacoffee.com/filmlegame">Buy me a coffee!</a>
+          </Typography>
+        </DialogContent>
+      </BootstrapDialog>
+    )
+  }
+
+  return (
+    <div className="App">
+      <ShareDialog/>
+      <InfoDialog/>
+
+      <Grid container direction="column" >
+        <Grid item container direction="row" >
+          <Grid item xs={1}>
+          </Grid>
+          <Grid item xs={10}> 
+            <Typography color="white" component={'span'}>
+              <h1 className='font-title2'>
+                <b>FILMLE</b>
+              </h1>
+            </Typography>
+          </Grid>
+          <Grid item xs={1}>
+            <Box style={{height:"100%"}} display="flex" flexDirection="row" align="center" alignItems="center" justifyContent="center" m={0}>
+              <ThemeProvider theme={myTheme}>
+                <IconButton aria-label="info" color="secondary" onClick={() => handleClickOpenInfo()}>
+                  <Info/>
+                </IconButton>
+              </ThemeProvider>
+            </Box>
+          </Grid>
         </Grid>
+        
         <Grid item container>
           <Grid item xs={0.2}></Grid>
           <Grid item xs={11.6}>
