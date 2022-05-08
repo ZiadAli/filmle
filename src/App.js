@@ -10,7 +10,16 @@ import { getStorage, ref as stref, getDownloadURL } from "firebase/storage";
 import { Grid } from '@mui/material';
 import { Card } from '@mui/material';
 import { Button } from '@mui/material';
-import { AntonRegular } from './fonts/Anton-Regular.ttf'
+import { Dialog, DialogTitle } from '@mui/material';
+import { IconButton } from '@mui/material';
+import { Close, Share } from '@mui/icons-material';
+import { PropTypes } from 'prop-types'
+import { styled } from '@mui/material';
+import { DialogContent } from '@mui/material';
+import { DialogActions } from '@mui/material';
+import { createTheme } from '@mui/material';
+import { ThemeProvider } from '@mui/material';
+
 
 function App() {
   const [todayFilmCast, setTodayFilmCast] = useState(Object)
@@ -19,6 +28,7 @@ function App() {
   const [allTitleIds, setAllTitleIds] = useState([])
 
   const [todayFilm, setTodayFilm] = useState("")
+  const [todayFilmTitle, setTodayFilmTitle] = useState("")
 
   const [imageUrl, setImageUrl] = useState(undefined);
 
@@ -27,6 +37,32 @@ function App() {
   const [directors, setDirectors] = useState([])
 
   const [gameWon, setGameWon] = useState([])
+  const [gameOver, setGameOver] = useState(false)
+
+  const [openDialog, setOpenDialog] = useState(false)
+
+  const handleClickOpen = () => {
+    setOpenDialog(true);
+  };
+
+  const handleClose = () => {
+    setOpenDialog(false);
+  };
+
+  const myTheme = createTheme({
+    overrides: {
+      Button: {
+        raisedPrimary: {
+          color: "#ffffff"
+        }
+      }
+    },
+    palette: {
+      primary: {
+        main: '#fff',
+      },
+    },
+  });
 
   // Download image from Firebase to display
   const downloadImage = (id, index) => {
@@ -76,12 +112,12 @@ function App() {
     date = date.replace("/", "_")
     console.log(date)
 
-    getTodayFilm(date)
-    readAllTitles()
+    readAllTitles(date)
+    //getTodayFilm(date)
   }, [])
 
   // Loads the ID of today's film and loads the cast
-  const getTodayFilm = (date) => {
+  const getTodayFilm = (date, titles, ids) => {
     setTodayFilm("")
     onValue(ref(db, "Answers/" + date), snapshot => {
       const data = snapshot.val()
@@ -90,12 +126,18 @@ function App() {
         setTodayFilm(id)
         readCast(id, setTodayFilmCast, false)
         downloadImage(id, 0)
+
+        // Get title
+        if (ids.indexOf(id) >= 0) {
+          const filmTitle = titles[ids.indexOf(id)]
+          setTodayFilmTitle(filmTitle)
+        }
       }
     })
   }
 
   // Fetches all possible movie titles from Popular part of database
-  const readAllTitles = () => {
+  const readAllTitles = (date) => {
     setAllTitles([])
     setAllTitleIds([])
     onValue(ref(db, "Popular"), snapshot => {
@@ -109,6 +151,7 @@ function App() {
         }
         setAllTitles(titles)
         setAllTitleIds(ids)
+        getTodayFilm(date, titles, ids)
       }
     })
   }
@@ -207,6 +250,7 @@ function App() {
   const winGame = (film) => {
     setGuesses([...guesses, film])
     setGameWon([...gameWon, true])
+    setOpenDialog(true)
   }
 
   // Get film ID corresponding to title selected and load it into guesses variable, also fetch the cast
@@ -214,6 +258,7 @@ function App() {
     const index = allTitles.indexOf(film)
     if (index >= 0) {
       const id = allTitleIds[index]
+      const finishGame = guesses.length >= 5
       if (id === todayFilm) {
         console.log("You Win!")
         winGame(film)
@@ -223,6 +268,11 @@ function App() {
         readCast(id, null, true)
         downloadImage(todayFilm, guesses.length+1)
         setGuesses([...guesses, film])
+
+        if (finishGame) {
+          setGameOver(true)
+          setOpenDialog(true)
+        }
       }
     }
   }
@@ -238,9 +288,9 @@ function App() {
           <Autocomplete
             options={allTitles}
             clearOnEscape
-            disabled={gameWon.includes(true)}
+            disabled={gameOver}
             renderInput={params => (
-              <TextField {...params}  label="Film" variant="outlined" disabled={gameWon.includes(true)}/> 
+              <TextField {...params}  label="Film" variant="outlined" disabled={gameOver}/> 
             )}
             onChange={(_event, film) => {
               if (film !== null) {
@@ -339,9 +389,11 @@ function App() {
   const ImageButton = (props) => {
     return (
       <Grid item xs={props.size}>
-        <Button onClick={() => imageButtonClicked(props.id-1)}>
-          {props.id}
-        </Button>
+        <ThemeProvider theme={myTheme}>
+          <Button style={{borderColor: "white"}} onClick={() => imageButtonClicked(props.id-1)} variant="contained" color="primary">
+            {props.id}
+          </Button>
+        </ThemeProvider>
       </Grid> 
     )
   }
@@ -349,7 +401,7 @@ function App() {
   const AllImageButtons = () => {
     var totalButtons = [...guesses, todayFilm]
     console.log("Game Won From Button Function: " + gameWon)
-    if (gameWon.includes(true)) {
+    if (gameWon.includes(true) || gameOver) {
       totalButtons = [0, 1, 2, 3, 4, 5]
     }
     // else if (totalButtons.length > 6) {
@@ -361,9 +413,106 @@ function App() {
   ))
   }
 
+  const printResult = () => {
+    var gameWonIndex = gameWon.indexOf(true)
+    console.log("Game Won Index: " + gameWonIndex)
+
+    const guessCount = gameWon.length
+    const remainCount = 6-guessCount
+
+    var outputString = "Filmle\n\n"
+    for (let i = 0; i < guessCount; i++) {
+      if (i === gameWonIndex) {
+        outputString = outputString + "🟩"
+      }
+      else if (actors[i] === "None" && directors[i] === "None") {
+        outputString = outputString + "⬛"
+      }
+      else {
+        outputString = outputString + "🟨"
+      }
+    }
+
+    for (let i = 0; i < remainCount; i++) {
+      outputString = outputString + "⬜️"
+    }
+
+    outputString = outputString + "\n\nhttps://www.filmle.org"
+
+    console.log("Game Output String " + outputString)
+    if (navigator.canShare !== undefined) {
+      navigator.share(outputString)
+    }
+    else {
+      navigator.clipboard.writeText(outputString)
+    }
+
+    console.log(outputString)
+  }
+
+  const BootstrapDialogTitle = (props) => {
+    var { children, onClose, ...other } = props;
+    var title = "Next Time!"
+    if (gameWon.includes(true)) {
+      title = "Great Job!"
+    }
+  
+    return (
+      <DialogTitle sx={{ m: 0, p: 2 }} {...other} align="center">
+        {title}
+        {onClose ? (
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <Close />
+          </IconButton>
+        ) : null}
+      </DialogTitle>
+    );
+  };  
+
+  BootstrapDialogTitle.propTypes = {
+    children: PropTypes.node,
+    onClose: PropTypes.func.isRequired,
+  };
+  
+  const BootstrapDialog = styled(Dialog)(({ theme }) => ({
+    '& .MuiDialogContent-root': {
+      padding: theme.spacing(2),
+    },
+    '& .MuiDialogActions-root': {
+      padding: theme.spacing(1),
+    },
+  }));
+
   return (
     <div className="App">
-      
+      <BootstrapDialog
+        onClose={handleClose}
+        //aria-labelledby="customized-dialog-title"
+        open={openDialog}
+      >
+        <BootstrapDialogTitle id="customized-dialog-title" onClose={handleClose}>
+          Title Goes Here
+        </BootstrapDialogTitle>
+        <DialogContent dividers>
+          <Typography gutterBottom>
+            Today's Film: {todayFilmTitle}
+          </Typography>
+        </DialogContent>
+        <DialogActions align="center">
+          <div style={{flex: '1 0 0'}} />
+          <Button variant="contained" color="success" onClick={() => printResult()}><b>Share &nbsp;</b> <Share/></Button>
+          <div style={{flex: '1 0 0'}} />
+        </DialogActions>
+      </BootstrapDialog>
       <Grid container direction="column" >
         <Grid item> 
           <Typography color="white" component={'span'}>
@@ -386,6 +535,7 @@ function App() {
               <Grid item container direction="row">
                 <AllImageButtons/>
               </Grid>
+              <div style={{height:"5px"}}></div>
               <FilmAutocomplete/>
               <AnswerCard id={0}/>
               <AnswerCard id={1}/>
